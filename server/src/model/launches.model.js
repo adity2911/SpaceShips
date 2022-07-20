@@ -1,52 +1,72 @@
-const launches = new Map();
+const launchesDatabase = require("./launches.mongo");
+const planets = require("./planets.mongoose");
 
-let currentFlight = 100;
-const launch = {
-    flightNumber: 100,
-    mission: 'Kepler ExplorationX',
-    rocket: 'Explorer IS1',
-    launchDate: new Date('December 27,2030'),
-    target: 'Kepler-442b',
-    customer: ['ZTM', 'NASA'],
+async function getLaunchesData() {
+  return await launchesDatabase.find({}, { _id: 0, __v: 0 });
+}
+
+async function saveLaunch(launch) {
+  const planet = await planets.findOne({
+    keplerName: launch.target,
+  });
+
+  if (!planet) {
+    throw new Error("Planet is not A Habitable Planet!!");
+  }
+
+  await launchesDatabase.findOneAndUpdate(
+    { flightNumber: launch.flightNumber },
+    launch,
+    { upsert: true }
+  );
+}
+
+async function getLatestFlightNumber() {
+  const number = await launchesDatabase
+    .findOne() //returns the topmost flightNumber after sorting the data from the database!!!
+    .sort("-flightNumber");
+  if (!number) {
+    return 100; //default
+  }
+  return number.flightNumber + 1;
+}
+
+async function scheduleNewLaunch(launch) {
+  let currentFlightNumber = await getLatestFlightNumber();
+
+  const newLaunch = Object.assign(launch, {
+    flightNumber: currentFlightNumber,
     upcoming: true,
     success: true,
-};
-
-launches.set(launch.flightNumber, launch);
-
-function idExists(deleteId) {
-    console.log(launches.has(deleteId));
-    return launches.has(deleteId);
+    costumer: ["Sun Inc.", "NASA"],
+  });
+  try {
+    await saveLaunch(newLaunch);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-function getLaunchesData() {
-    return (Array.from(launches.values()));
+async function idExists(deleteId) {
+  return await launchesDatabase.findOne({
+    flightNumber: deleteId,
+  });
 }
 
-function addNewLaunch(launch) {
-    currentFlight++;
-
-    launches.set(
-        currentFlight,
-        Object.assign(launch, {
-            flightNumber: currentFlight,
-            upcoming: true,
-            success: true,
-            customer: ['ZTM', 'NASA'],
-        })
-    );
-}
-
-function deleteIdFromData(id) {
-    const aborted = launches.get(id);
-    aborted.upcoming = false;
-    aborted.success = false;
-    return aborted;
+async function deleteIdFromData(id) {
+  const abortedFlight = await launchesDatabase.updateOne(
+    { flightNumber: id },
+    {
+      success: false,
+      upcoming: false,
+    }
+  );
+  return abortedFlight.modifiedCount === 1;
 }
 
 module.exports = {
-    idExists,
-    getLaunchesData,
-    addNewLaunch,
-    deleteIdFromData,
+  getLaunchesData,
+  scheduleNewLaunch,
+  idExists,
+  deleteIdFromData,
 };

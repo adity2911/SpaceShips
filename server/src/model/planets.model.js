@@ -2,14 +2,15 @@ const { parse } = require('csv-parse');
 const fs = require('fs');
 const path = require('path');
 
-const planets = [];
+const habitablePlanets = require('./planets.mongoose')
 
 function isHabitable(planet) {
     return planet['koi_disposition'] === 'CONFIRMED'
         && planet['koi_insol'] > 0.36 && planet['koi_insol'] < 1.11
         && planet['koi_prad'] < 1.6;
 }
-function loadPlanetsData() {
+
+async function loadPlanetsData() {
     return new Promise((resolve, reject) => {
         fs.createReadStream(path.join(__dirname, '..', '..', 'data', 'kepler_data.csv'))
             .pipe(parse({
@@ -18,22 +19,35 @@ function loadPlanetsData() {
             }))
             .on('data', (data) => {
                 if (isHabitable(data)) {
-                    planets.push(data);
+                    insertPlanets(data);
                 }
             })
             .on('error', (err) => {
                 console.log(err);
                 reject(err);
             })
-            .on('end', () => {
-                console.log(`Data Found: ${planets.length}`);
+            .on('end', async () => {
+                let habitablePlanetLength = (await getAllPlanets()).length;
+                console.log(`Habitable Planets Found: ${habitablePlanetLength}`);
                 resolve();
             });
     });
 }
 
-function getAllPlanets() {
-    return planets;
+async function getAllPlanets() {
+    return await habitablePlanets.find({});
+}
+
+async function insertPlanets(data){
+    try {
+        await habitablePlanets.updateOne(
+            {keplerName: data.kepler_name},
+            {keplerName: data.kepler_name},
+            {upsert: true},
+        )
+    }catch(e){
+        console.error(`Couldnot Insert the file to the database: ${e}`)
+    }
 }
 
 module.exports = { loadPlanetsData, getAllPlanets, };
