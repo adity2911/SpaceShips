@@ -22,3 +22,7 @@ app.use('/*', (req, res) => {
 });
 
 module.exports = app; 
+
+/* 
+This is for Hacktober Fest 2022
+*/
