@@ -1,9 +1,5 @@
-const {
-  getLaunchesData,
-  scheduleNewLaunch,
-  idExists,
-  deleteIdFromData,
-} = require("../../model/launches.model");
+const { getLaunchesData, scheduleNewLaunch, idExists, deleteIdFromData } =
+  require("../../model/launches.model").default;
 
 async function httpGetLaunchesData(req, res) {
   const launchesData = await getLaunchesData();
