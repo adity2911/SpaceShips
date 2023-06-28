@@ -1,10 +1,14 @@
-const express = require('express');
-const { httpGetLaunchesData, httpSetLaunchesData, httpAbortLaunch } = require('./launches.controller');
+import { Router } from "express";
+import {
+  httpGetLaunchesData,
+  httpSetLaunchesData,
+  httpAbortLaunch,
+} from "./launches.controller";
 
-const launchesRouter = express.Router();
+const launchesRouter = Router();
 
-launchesRouter.get('/', httpGetLaunchesData);
-launchesRouter.post('/', httpSetLaunchesData);
-launchesRouter.delete('/:id', httpAbortLaunch);
+launchesRouter.get("/", httpGetLaunchesData);
+launchesRouter.post("/", httpSetLaunchesData);
+launchesRouter.delete("/:id", httpAbortLaunch);
 
-module.exports = launchesRouter;
+export default launchesRouter;
