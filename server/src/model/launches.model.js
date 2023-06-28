@@ -1,8 +1,8 @@
-const launchesDatabase = require("./launches.mongo");
-const planets = require("./planets.mongoose");
+import { find, findOneAndUpdate, findOne, updateOne } from "./launches.mongo";
+import planets from "./planets.mongoose";
 
 async function getLaunchesData() {
-  return await launchesDatabase.find({}, { _id: 0, __v: 0 });
+  return await find({}, { _id: 0, __v: 0 });
 }
 
 async function saveLaunch(launch) {
@@ -14,16 +14,13 @@ async function saveLaunch(launch) {
     throw new Error("Planet is not A Habitable Planet!!");
   }
 
-  await launchesDatabase.findOneAndUpdate(
-    { flightNumber: launch.flightNumber },
-    launch,
-    { upsert: true }
-  );
+  await findOneAndUpdate({ flightNumber: launch.flightNumber }, launch, {
+    upsert: true,
+  });
 }
 
 async function getLatestFlightNumber() {
-  const number = await launchesDatabase
-    .findOne() //returns the topmost flightNumber after sorting the data from the database!!!
+  const number = await findOne() //returns the topmost flightNumber after sorting the data from the database!!!
     .sort("-flightNumber");
   if (!number) {
     return 100; //default
@@ -48,13 +45,13 @@ async function scheduleNewLaunch(launch) {
 }
 
 async function idExists(deleteId) {
-  return await launchesDatabase.findOne({
+  return await findOne({
     flightNumber: deleteId,
   });
 }
 
 async function deleteIdFromData(id) {
-  const abortedFlight = await launchesDatabase.updateOne(
+  const abortedFlight = await updateOne(
     { flightNumber: id },
     {
       success: false,
@@ -64,7 +61,7 @@ async function deleteIdFromData(id) {
   return abortedFlight.modifiedCount === 1;
 }
 
-module.exports = {
+export default {
   getLaunchesData,
   scheduleNewLaunch,
   idExists,

@@ -1,30 +1,30 @@
-const http = require('http');
-const mongoose = require('mongoose');
+import { createServer } from "http";
+import { connection, connect } from "mongoose";
 
-const app = require('./app.js');
-const { loadPlanetsData } = require('./model/planets.model');
+import app from "./app.js";
+import { loadPlanetsData } from "./model/planets.model";
 
 const PORT = process.env.PORT || 8000;
-const mongoose_url = 'mongodb+srv://nasa-cluster:0VVnsustQHrHHjDT@nasa-api.u6efh.mongodb.net/?retryWrites=true&w=majority';
+const mongoose_url =
+  "mongodb+srv://nasa-cluster:0VVnsustQHrHHjDT@nasa-api.u6efh.mongodb.net/?retryWrites=true&w=majority";
 
+const server = createServer(app);
 
-const server = http.createServer(app);
-
-mongoose.connection.once('open', () => {
-    console.log('Mongoose Connection stablished');
+connection.once("open", () => {
+  console.log("Mongoose Connection stablished");
 });
 
-mongoose.connection.on('error', (e) => {
-    console.error(e);
+connection.on("error", (e) => {
+  console.error(e);
 });
 
 async function listenServer() {
-    mongoose.connect(mongoose_url);
-    await loadPlanetsData();
+  connect(mongoose_url);
+  await loadPlanetsData();
 
-    server.listen(PORT, () => {
-        console.log(`listening on PORT: ${PORT}`);
-    });
+  server.listen(PORT, () => {
+    console.log(`listening on PORT: ${PORT}`);
+  });
 }
 
 listenServer();

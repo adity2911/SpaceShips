@@ -1,9 +1,9 @@
-const {
+import {
   getLaunchesData,
   scheduleNewLaunch,
   idExists,
   deleteIdFromData,
-} = require("../../model/launches.model");
+} from "../../model/launches.model";
 
 async function httpGetLaunchesData(req, res) {
   const launchesData = await getLaunchesData();
@@ -12,16 +12,13 @@ async function httpGetLaunchesData(req, res) {
 
 async function httpSetLaunchesData(req, res) {
   const data = req.body;
-
   if (!data.launchDate || !data.target || !data.rocket || !data.mission) {
     return res.status(400).json({ error: "Data is missing" });
   }
-
   data.launchDate = new Date(data.launchDate);
   if (isNaN(data.launchDate)) {
     return res.status(400).json({ error: "Invalid Launch Date" });
   }
-
   await scheduleNewLaunch(data);
   return res.status(201).json(data);
 }
@@ -40,4 +37,4 @@ async function httpAbortLaunch(req, res) {
   });
 }
 
-module.exports = { httpGetLaunchesData, httpSetLaunchesData, httpAbortLaunch };
+export default { httpGetLaunchesData, httpSetLaunchesData, httpAbortLaunch };
